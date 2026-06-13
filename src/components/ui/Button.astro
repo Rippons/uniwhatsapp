@@ -1,0 +1,31 @@
+---
+interface Props {
+  variant?: 'primary' | 'secondary' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
+  type?: 'button' | 'submit';
+  class?: string;
+  id?: string;
+}
+
+const { variant = 'primary', size = 'md', type = 'button', class: className = '', id } = Astro.props;
+
+const variants: Record<string, string> = {
+  primary: 'bg-blue-600 text-white hover:bg-blue-700',
+  secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300',
+  danger: 'bg-red-600 text-white hover:bg-red-700',
+};
+
+const sizes: Record<string, string> = {
+  sm: 'px-3 py-1.5 text-sm',
+  md: 'px-4 py-2 text-sm',
+  lg: 'px-6 py-3 text-base',
+};
+---
+
+<button
+  type={type}
+  id={id}
+  class={`rounded-lg font-medium transition-colors ${variants[variant]} ${sizes[size]} ${className}`}
+>
+  <slot />
+</button>

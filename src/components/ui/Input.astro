@@ -1,0 +1,29 @@
+---
+interface Props {
+  label: string;
+  name: string;
+  type?: astroHTML.JSX.HTMLInputTypeAttribute;
+  placeholder?: string;
+  required?: boolean;
+  value?: string;
+  class?: string;
+}
+
+const { label, name, type = 'text', placeholder = '', required = false, value = '', class: className = '' } = Astro.props;
+---
+
+<div class={`flex flex-col gap-1.5 ${className}`}>
+  <label for={name} class="text-sm font-medium text-gray-700">
+    {label}
+    {required && <span class="text-red-500">*</span>}
+  </label>
+  <input
+    type={type}
+    id={name}
+    name={name}
+    placeholder={placeholder}
+    required={required}
+    value={value}
+    class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  />
+</div>

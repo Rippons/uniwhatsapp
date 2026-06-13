@@ -1,0 +1,258 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+import StatCard from '@components/ui/StatCard.astro';
+---
+
+<AdminLayout title="Dashboard">
+  <div class="space-y-8">
+    <section class="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-slate-900 via-indigo-700 to-violet-700 px-8 py-10 text-white shadow-2xl shadow-slate-900/20">
+      <div class="relative z-10 max-w-3xl">
+        <p class="text-sm uppercase tracking-[0.28em] text-indigo-200/80">Panel de administración</p>
+        <h1 class="mt-4 text-4xl font-semibold tracking-tight">Dashboard</h1>
+        <p class="mt-4 max-w-2xl text-base leading-7 text-slate-200/90">Visualiza el estado de estudiantes, horarios y notificaciones con métricas claras y actividad reciente.</p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/10">
+            <span class="h-2.5 w-2.5 rounded-full bg-emerald-300 animate-pulse"></span>
+            System Online
+          </span>
+        </div>
+      </div>
+
+      <div class="pointer-events-none absolute inset-0 opacity-40">
+        <div class="absolute -right-24 top-0 h-72 w-72 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="absolute left-10 top-20 h-56 w-56 rounded-full bg-indigo-500/20 blur-3xl"></div>
+      </div>
+    </section>
+
+    <section class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div id="stat-students"><StatCard label="Estudiantes" value="-" icon="users" color="blue" /></div>
+      <div id="stat-schedules"><StatCard label="Horarios" value="-" icon="calendar" color="green" /></div>
+      <div id="stat-notifications"><StatCard label="Notificaciones" value="-" icon="bell" color="purple" /></div>
+      <div id="stat-active"><StatCard label="Activos" value="-" icon="chat" color="orange" /></div>
+    </section>
+
+    <section class="grid gap-8 lg:grid-cols-[2fr_1fr]">
+      <div class="rounded-[32px] bg-white border border-slate-200/70 shadow-sm overflow-hidden">
+        <div class="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50 px-6 py-5">
+          <div>
+            <h2 class="text-lg font-semibold text-slate-900">Actividad reciente</h2>
+            <p class="mt-1 text-sm text-slate-500">Últimos eventos del sistema y acciones importantes.</p>
+          </div>
+          <button class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-500 shadow-sm transition hover:bg-slate-100">
+            <span class="material-symbols-outlined">filter_list</span>
+          </button>
+        </div>
+        <div id="recent-activity" class="divide-y divide-slate-200/80">
+          <div class="p-6 text-slate-500 text-sm text-center">Cargando actividad reciente...</div>
+        </div>
+        <div class="bg-slate-50 px-6 py-4 text-right">
+          <button class="rounded-2xl bg-indigo-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700">
+            Ver toda la actividad
+          </button>
+        </div>
+      </div>
+
+      <aside class="space-y-6">
+        <div class="rounded-[32px] bg-white border border-slate-200/70 shadow-sm p-6">
+          <h3 class="text-base font-semibold text-slate-900">Próximos Eventos</h3>
+          <div class="mt-6 space-y-4">
+            <div class="flex gap-4">
+              <div class="flex h-14 w-14 flex-col items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+                <span class="text-[10px] uppercase tracking-[0.18em]">Jun</span>
+                <span class="text-xl font-semibold text-slate-900">24</span>
+              </div>
+              <div class="grow">
+                <p class="font-semibold text-slate-900">Junta de Padres</p>
+                <p class="text-sm text-slate-500">09:00 AM • Salón Principal</p>
+              </div>
+            </div>
+            <div class="flex gap-4">
+              <div class="flex h-14 w-14 flex-col items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+                <span class="text-[10px] uppercase tracking-[0.18em]">Jun</span>
+                <span class="text-xl font-semibold text-slate-900">28</span>
+              </div>
+              <div class="grow">
+                <p class="font-semibold text-slate-900">Exámenes Trimestrales</p>
+                <p class="text-sm text-slate-500">Todo el día</p>
+              </div>
+            </div>
+          </div>
+          <button class="mt-6 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
+            Ver calendario completo
+          </button>
+        </div>
+
+        <div class="relative overflow-hidden rounded-[32px] bg-slate-900 shadow-sm">
+          <img class="absolute inset-0 h-full w-full object-cover opacity-90" src="https://images.unsplash.com/photo-1522199710521-72d69614c702?auto=format&fit=crop&w=900&q=80" alt="Support" />
+          <div class="absolute inset-0 bg-slate-900/60"></div>
+          <div class="relative p-6 text-white">
+            <p class="text-lg font-semibold">¿Necesitas ayuda?</p>
+            <p class="mt-2 text-sm text-slate-200/90">Contacta con soporte técnico para resolver dudas y lanzar actualizaciones.</p>
+            <button class="mt-6 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">
+              Contactar soporte
+            </button>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </div>
+</AdminLayout>
+
+<script is:inline>
+  const token = localStorage.getItem('token')
+  if (!token) {
+    window.location.href = '/login'
+  }
+
+  function setStatValue(id, value) {
+    const card = document.getElementById(id)
+    if (card) {
+      const valueEl = card.querySelector('p.text-3xl')
+      if (valueEl) valueEl.textContent = String(value)
+    }
+  }
+
+  function renderActivity(notifications) {
+    const container = document.getElementById('recent-activity')
+    if (!container) return
+
+    if (!notifications.length) {
+      container.innerHTML = '<div class="p-6 text-slate-500 text-sm text-center">No hay actividad reciente.</div>'
+      return
+    }
+
+    const rows = notifications
+      .slice(0, 5)
+      .map((n) => {
+        const date = new Date(n.createdAt).toLocaleDateString('es-CO', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+
+        const statusColor = {
+          CREADO: 'bg-emerald-100 text-emerald-700',
+          ACTUALIZADO: 'bg-sky-100 text-sky-700',
+          PENDING: 'bg-amber-100 text-amber-700',
+          SENT: 'bg-emerald-100 text-emerald-700',
+          FAILED: 'bg-rose-100 text-rose-700',
+        }[n.status] || 'bg-slate-100 text-slate-700'
+
+        return `
+          <div class="flex flex-col gap-4 p-6 hover:bg-slate-50 transition-colors">
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-900">
+                  <span class="material-symbols-outlined">${n.status === 'FAILED' ? 'warning' : n.status === 'SENT' ? 'check_circle' : n.status === 'ACTUALIZADO' ? 'event_repeat' : 'person_add'}</span>
+                </span>
+                <div>
+                  <p class="text-sm font-semibold text-slate-900">${n.title}</p>
+                  <p class="mt-1 text-xs text-slate-500">${date}</p>
+                </div>
+              </div>
+              <span class="rounded-full px-3 py-1 text-xs font-semibold ${statusColor}">${n.status}</span>
+            </div>
+          </div>
+        `
+      })
+      .join('')
+
+    container.innerHTML = rows
+  }
+
+  async function loadDashboard() {
+    const headers = { Authorization: 'Bearer ' + token }
+
+    try {
+      const studentsRes = await fetch('/api/students?limit=1', { headers })
+      if (studentsRes.ok) {
+        const studentsData = await studentsRes.json()
+        setStatValue('stat-students', studentsData.pagination?.total ?? '-')
+
+        const activeRes = await fetch('/api/students?limit=1000', { headers })
+        if (activeRes.ok) {
+          const activeData = await activeRes.json()
+          const active = (activeData.data ?? []).filter((s) => s.active).length
+          setStatValue('stat-active', active)
+        }
+      }
+    } catch {
+      setStatValue('stat-students', 'Error')
+    }
+
+    try {
+      const notifRes = await fetch('/api/notifications?limit=10', { headers })
+      if (notifRes.ok) {
+        const notifData = await notifRes.json()
+        setStatValue('stat-notifications', notifData.pagination?.total ?? notifData.data?.length ?? '-')
+
+        const [studentsRes, schedulesRes] = await Promise.all([
+          fetch('/api/students?limit=5', { headers }),
+          fetch('/api/schedules/recent?limit=5', { headers }),
+        ])
+
+        const activities = []
+        const notifs = notifData.data ?? []
+        for (const n of notifs) {
+          activities.push({
+            title: n.title || n.message || 'Notificación',
+            createdAt: n.createdAt || n.created_at || new Date().toISOString(),
+            status: n.status || 'PENDING',
+          })
+        }
+
+        if (studentsRes.ok) {
+          const studentsData = await studentsRes.json()
+          const studs = studentsData.data ?? []
+          for (const s of studs) {
+            const created = new Date(s.createdAt).getTime()
+            const updated = new Date(s.updatedAt).getTime()
+            const isNew = Math.abs(updated - created) < 2000
+            activities.push({
+              title: `${isNew ? 'Se agregó estudiante' : 'Se actualizó estudiante'} (${s.fullName})`,
+              createdAt: s.updatedAt || s.createdAt,
+              status: isNew ? 'CREADO' : 'ACTUALIZADO',
+            })
+          }
+        }
+
+        if (schedulesRes.ok) {
+          const schedulesData = await schedulesRes.json()
+          const schs = schedulesData.data ?? []
+          for (const sc of schs) {
+            const created = new Date(sc.createdAt).getTime()
+            const updated = new Date(sc.updatedAt).getTime()
+            const isNew = Math.abs(updated - created) < 2000
+            const studentName = (sc.studentId && sc.studentId.fullName) || sc.studentFullName || 'Estudiante'
+            activities.push({
+              title: `${isNew ? 'Se agregó horario' : 'Se modificó horario'} (${studentName})`,
+              createdAt: sc.updatedAt || sc.createdAt,
+              status: isNew ? 'CREADO' : 'ACTUALIZADO',
+            })
+          }
+        }
+
+        activities.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        renderActivity(activities.slice(0, 5))
+      }
+    } catch {
+      setStatValue('stat-notifications', 'Error')
+    }
+
+    try {
+      const schedulesRes = await fetch('/api/schedules', { headers })
+      if (schedulesRes.ok) {
+        const schedulesData = await schedulesRes.json()
+        setStatValue('stat-schedules', schedulesData.data?.studentsWithSchedule ?? '-')
+      } else {
+        setStatValue('stat-schedules', 'Error')
+      }
+    } catch {
+      setStatValue('stat-schedules', 'Error')
+    }
+  }
+
+  loadDashboard()
+</script>

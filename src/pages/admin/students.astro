@@ -1,0 +1,410 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+---
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" is:inline></script>
+
+<AdminLayout title="Gestión de Estudiantes">
+  <div class="space-y-8">
+    <section class="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-slate-900 via-indigo-700 to-violet-700 px-8 py-10 text-white shadow-2xl shadow-slate-900/20">
+      <div class="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div class="max-w-3xl">
+          <p class="text-sm uppercase tracking-[0.28em] text-indigo-200/80">Panel de administración</p>
+          <h1 class="mt-4 text-4xl font-semibold tracking-tight">Gestión de Estudiantes</h1>
+          <p class="mt-4 max-w-2xl text-base leading-7 text-slate-200/90">Administra la base de datos de alumnos, filtra por facultad y realiza seguimiento del estado académico.</p>
+        </div>
+        <button id="add-student-btn" class="inline-flex items-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-semibold text-[#3525cd] shadow-xl shadow-white/20 transition hover:bg-[#f8f8ff] active:scale-[0.98]">
+          <span class="material-symbols-outlined">add</span>
+          Nuevo Estudiante
+        </button>
+      </div>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/10">
+          <span class="h-2.5 w-2.5 rounded-full bg-emerald-300 animate-pulse"></span>
+          System Online
+        </span>
+      </div>
+
+      <div class="pointer-events-none absolute inset-0 opacity-40">
+        <div class="absolute -right-24 top-0 h-72 w-72 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="absolute left-10 top-20 h-56 w-56 rounded-full bg-indigo-500/20 blur-3xl"></div>
+      </div>
+    </section>
+
+    <section class="rounded-[32px] bg-white border border-[#c7c4d8] p-6 shadow-sm">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div class="relative w-full lg:max-w-xl">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+          <input id="search-input" type="text" placeholder="Buscar por nombre o ID..." class="w-full rounded-2xl border border-[#c7c4d8] bg-[#f7f9fb] py-3 pl-12 pr-4 text-sm text-slate-900 outline-none transition focus:border-[#3525cd] focus:ring-2 focus:ring-[#3525cd]/20" />
+        </div>
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <select id="faculty-filter" class="w-full rounded-2xl border border-[#c7c4d8] bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#3525cd] focus:ring-2 focus:ring-[#3525cd]/20">
+            <option value="">Todas las facultades</option>
+            <option value="Ingenieria de software">Ingeniería de Software</option>
+            <option value="Diseño grafico">Diseño Gráfico</option>
+            <option value="Finanzas y comercio">Finanzas y Comercio</option>
+            <option value="Diseño de modas">Diseño de Modas</option>
+            <option value="Hoteleria y turismo">Hotelería y Turismo</option>
+          </select>
+          <select id="status-filter" class="w-full rounded-2xl border border-[#c7c4d8] bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#3525cd] focus:ring-2 focus:ring-[#3525cd]/20">
+            <option value="">Todos los estados</option>
+            <option value="true">Activo</option>
+            <option value="false">Inactivo</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="rounded-[32px] bg-white border border-[#c7c4d8] shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[720px] border-collapse text-left">
+          <thead class="bg-[#f7f9fb] border-b border-[#c7c4d8]">
+            <tr>
+              <th class="px-6 py-4 text-sm font-semibold text-slate-500">Nombre</th>
+              <th class="px-6 py-4 text-sm font-semibold text-slate-500">Código</th>
+              <th class="px-6 py-4 text-sm font-semibold text-slate-500">Teléfono</th>
+              <th class="px-6 py-4 text-sm font-semibold text-slate-500">Facultad</th>
+              <th class="px-6 py-4 text-sm font-semibold text-slate-500">Semestre</th>
+              <th class="px-6 py-4 text-sm font-semibold text-slate-500">Estado</th>
+              <th class="px-6 py-4 text-right text-sm font-semibold text-slate-500">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="students-table-body">
+            <tr id="loading-row">
+              <td colspan="7" class="px-6 py-12 text-center text-slate-500">
+                <div class="flex flex-col items-center gap-3">
+                  <div class="h-8 w-8 rounded-full border-4 border-[#3525cd] border-t-transparent animate-spin"></div>
+                  <p class="text-sm">Cargando base de datos...</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="flex flex-col gap-4 px-6 py-4 bg-[#f7f9fb] border-t border-[#c7c4d8] md:flex-row md:items-center md:justify-between">
+        <p class="text-sm text-slate-500">Mostrando <span class="font-semibold" id="pagination-summary">1-10</span> de <span class="font-semibold" id="pagination-total">0</span> estudiantes</p>
+        <div class="inline-flex flex-wrap items-center gap-2">
+          <button id="prev-page" class="rounded-2xl border border-[#c7c4d8] bg-white px-4 py-2 text-sm text-slate-700 transition hover:bg-[#f2f4f6] disabled:opacity-40 disabled:cursor-not-allowed">Anterior</button>
+          <div id="page-numbers" class="inline-flex gap-2"></div>
+          <button id="next-page" class="rounded-2xl border border-[#c7c4d8] bg-white px-4 py-2 text-sm text-slate-700 transition hover:bg-[#f2f4f6] disabled:opacity-40 disabled:cursor-not-allowed">Siguiente</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</AdminLayout>
+
+<div id="student-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+  <div id="modal-container" class="relative w-full max-w-lg rounded-[32px] bg-white shadow-2xl transition-transform duration-300 ease-out transform scale-95 opacity-0">
+    <div class="border-b border-[#c7c4d8] px-8 py-6 flex items-center justify-between">
+      <div>
+        <h3 class="text-xl font-semibold text-slate-900" id="modal-title">Nuevo Estudiante</h3>
+      </div>
+      <button id="close-modal" class="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 transition-colors">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="p-8 space-y-6">
+      <div id="modal-error" class="hidden rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"></div>
+      <div class="grid gap-4">
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-slate-600">Nombre completo</label>
+          <input id="field-fullName" type="text" placeholder="Ej. Ana García López" class="w-full rounded-2xl border border-[#c7c4d8] px-4 py-3 text-sm outline-none transition focus:border-[#3525cd] focus:ring-2 focus:ring-[#3525cd]/20" />
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-slate-600">Cédula (código)</label>
+            <input id="field-code" type="text" placeholder="Ej. 1020481234" class="w-full rounded-2xl border border-[#c7c4d8] px-4 py-3 text-sm outline-none transition focus:border-[#3525cd] focus:ring-2 focus:ring-[#3525cd]/20" />
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-slate-600">Teléfono celular</label>
+            <input id="field-phone" type="text" placeholder="Ej. 3101234567" class="w-full rounded-2xl border border-[#c7c4d8] px-4 py-3 text-sm outline-none transition focus:border-[#3525cd] focus:ring-2 focus:ring-[#3525cd]/20" />
+          </div>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-slate-600">Facultad</label>
+            <select id="field-faculty" class="w-full rounded-2xl border border-[#c7c4d8] px-4 py-3 text-sm outline-none transition focus:border-[#3525cd] focus:ring-2 focus:ring-[#3525cd]/20">
+              <option value="" disabled selected>Ej. Seleccionar facultad</option>
+              <option value="Ingenieria de software">Ingeniería de Software</option>
+              <option value="Diseño grafico">Diseño Gráfico</option>
+              <option value="Finanzas y comercio">Finanzas y Comercio</option>
+              <option value="Diseño de modas">Diseño de Modas</option>
+              <option value="Hoteleria y turismo">Hotelería y Turismo</option>
+            </select>
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-slate-600">Semestre</label>
+            <select id="field-semester" class="w-full rounded-2xl border border-[#c7c4d8] px-4 py-3 text-sm outline-none transition focus:border-[#3525cd] focus:ring-2 focus:ring-[#3525cd]/20">
+              <option value="" disabled selected>Ej. Seleccionar semestre</option>
+              <option value="1">1° semestre</option>
+              <option value="2">2° semestre</option>
+              <option value="3">3° semestre</option>
+              <option value="4">4° semestre</option>
+              <option value="5">5° semestre</option>
+              <option value="6">6° semestre</option>
+              <option value="7">7° semestre</option>
+              <option value="8">8° semestre</option>
+              <option value="9">9° semestre</option>
+              <option value="10">10° semestre</option>
+              <option value="11">11° semestre</option>
+              <option value="12">12° semestre</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
+        <button id="cancel-modal" class="rounded-2xl border border-[#c7c4d8] px-5 py-3 text-sm font-medium text-slate-700 hover:bg-[#f7f9fb] transition">Cancelar</button>
+        <button id="save-student" class="rounded-2xl bg-[#3525cd] px-5 py-3 text-sm font-semibold text-white hover:bg-[#4f46e5] transition">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  const token = localStorage.getItem('token');
+  if (!token) window.location.href = '/login';
+
+  const LIMIT = 10;
+  let currentPage = 1;
+  let totalPages = 1;
+  let searchTimeout;
+  let editingId = null;
+
+  async function loadStudents(page = 1) {
+    currentPage = page;
+    const search = document.getElementById('search-input').value.trim();
+    const faculty = document.getElementById('faculty-filter').value;
+    const active = document.getElementById('status-filter').value;
+
+    const params = new URLSearchParams({ page: String(page), limit: String(LIMIT) });
+    if (faculty) params.set('faculty', faculty);
+    if (active !== '') params.set('active', active);
+    if (search) params.set('search', search);
+
+    const tbody = document.querySelector('tbody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-500">Cargando...</td></tr>';
+
+    try {
+      const res = await fetch('/api/students?' + params.toString(), {
+        headers: { Authorization: 'Bearer ' + token },
+      });
+      const data = await res.json();
+      if (!tbody || !data.success) return;
+
+      const students = data.data ?? [];
+      totalPages = data.pagination?.totalPages ?? 1;
+
+      if (!students.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-500">No se encontraron estudiantes</td></tr>';
+        updatePagination(0, 0, 0);
+        return;
+      }
+
+      tbody.innerHTML = students.map((s) => `
+        <tr class="border-b border-[#c7c4d8] hover:bg-[#f2f4f6] transition-colors">
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-[#e2dfff] text-[#3525cd] flex items-center justify-center font-bold">${s.fullName.split(' ').map((n) => n[0]).join('').substring(0, 2)}</div>
+              <div>
+                <p class="font-semibold text-slate-900">${s.fullName}</p>
+                ${s.email ? `<p class="text-sm text-slate-500">${s.email}</p>` : ''}
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-sm text-slate-500">${s.code}</td>
+          <td class="px-6 py-4 text-sm text-slate-500">${s.phone}</td>
+          <td class="px-6 py-4">
+            <span class="inline-flex rounded-full bg-[#dae2fd] px-3 py-1 text-sm font-medium text-[#131b2e]">${s.faculty}</span>
+          </td>
+          <td class="px-6 py-4 text-center text-sm text-slate-500">${s.semester}°</td>
+          <td class="px-6 py-4">
+            <span class="inline-flex rounded-full px-3 py-1 text-sm font-semibold ${s.active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">${s.active ? 'Activo' : 'Inactivo'}</span>
+          </td>
+          <td class="px-6 py-4 text-right">
+            <div class="inline-flex items-center gap-2">
+              <button onclick="openEdit('${s._id}', ${JSON.stringify(s).replace(/"/g, '&quot;')})" class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#eff1f3] text-[#3525cd] hover:bg-[#dde2ff] transition-colors" title="Editar">
+                <span class="material-symbols-outlined text-[20px]">edit</span>
+              </button>
+              <button onclick="deleteStudent('${s._id}', '${s.fullName}')" class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ffe5e5] text-[#ba1a1a] hover:bg-[#ffd7d7] transition-colors" title="Eliminar">
+                <span class="material-symbols-outlined text-[20px]">delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      updatePagination(data.pagination?.total ?? 0, page, totalPages);
+    } catch {
+      if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-red-500">Error cargando estudiantes</td></tr>';
+    }
+  }
+
+  function updatePagination(total, page, pages) {
+    const container = document.getElementById('pagination-container');
+    const summary = document.getElementById('pagination-summary');
+    const totalEl = document.getElementById('pagination-total');
+    const pageNumbers = document.getElementById('page-numbers');
+    const prevBtn = document.getElementById('prev-page');
+    const nextBtn = document.getElementById('next-page');
+
+    if (!container || !summary || !totalEl || !pageNumbers || !prevBtn || !nextBtn) return;
+
+    container.style.display = total > 0 ? 'flex' : 'none';
+    summary.textContent = `1-10`;
+    totalEl.textContent = String(total);
+
+    prevBtn.disabled = page <= 1;
+    nextBtn.disabled = page >= pages;
+
+    pageNumbers.innerHTML = '';
+    const start = Math.max(1, page - 2);
+    const end = Math.min(pages, page + 2);
+    for (let i = start; i <= end; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = String(i);
+      btn.className = 'px-3 py-1.5 text-sm rounded-2xl border ' +
+        (i === page ? 'bg-[#3525cd] text-white border-[#3525cd]' : 'border-[#c7c4d8] text-slate-700 hover:bg-[#f2f4f6]');
+      btn.onclick = () => loadStudents(i);
+      pageNumbers.appendChild(btn);
+    }
+  }
+
+  document.getElementById('prev-page')?.addEventListener('click', () => loadStudents(currentPage - 1));
+  document.getElementById('next-page')?.addEventListener('click', () => loadStudents(currentPage + 1));
+
+  document.getElementById('search-input')?.addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => loadStudents(1), 400);
+  });
+  document.getElementById('faculty-filter')?.addEventListener('change', () => loadStudents(1));
+  document.getElementById('status-filter')?.addEventListener('change', () => loadStudents(1));
+
+  function openModal() {
+    editingId = null;
+    document.getElementById('modal-title').textContent = 'Nuevo Estudiante';
+    document.getElementById('field-fullName').value = '';
+    document.getElementById('field-code').value = '';
+    document.getElementById('field-phone').value = '';
+    document.getElementById('field-faculty').value = '';
+    document.getElementById('field-semester').value = '';
+    document.getElementById('modal-error').classList.add('hidden');
+    document.getElementById('student-modal').classList.remove('hidden');
+    document.getElementById('modal-container').classList.remove('scale-95', 'opacity-0');
+  }
+
+  function closeModal() {
+    document.getElementById('student-modal').classList.add('hidden');
+    document.getElementById('modal-container').classList.add('scale-95', 'opacity-0');
+    editingId = null;
+  }
+
+  window.openEdit = function(id, student) {
+    editingId = id;
+    document.getElementById('modal-title').textContent = 'Editar Estudiante';
+    document.getElementById('field-fullName').value = student.fullName;
+    document.getElementById('field-code').value = student.code;
+    document.getElementById('field-phone').value = student.phone;
+    document.getElementById('field-faculty').value = student.faculty;
+    document.getElementById('field-semester').value = String(student.semester);
+    document.getElementById('modal-error').classList.add('hidden');
+    document.getElementById('student-modal').classList.remove('hidden');
+    document.getElementById('modal-container').classList.remove('scale-95', 'opacity-0');
+  };
+
+  document.getElementById('add-student-btn')?.addEventListener('click', openModal);
+  document.getElementById('close-modal')?.addEventListener('click', closeModal);
+  document.getElementById('cancel-modal')?.addEventListener('click', closeModal);
+
+  document.getElementById('save-student')?.addEventListener('click', async () => {
+    const fullName = document.getElementById('field-fullName').value.trim();
+    const code = document.getElementById('field-code').value.trim();
+    const phone = document.getElementById('field-phone').value.trim();
+    const faculty = document.getElementById('field-faculty').value;
+    const semester = parseInt(document.getElementById('field-semester').value);
+    const errorEl = document.getElementById('modal-error');
+
+    if (!fullName || !code || !phone || !faculty || !semester) {
+      errorEl.textContent = 'Todos los campos son obligatorios.';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+
+    const saveBtn = document.getElementById('save-student');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Guardando...';
+
+    try {
+      const url = editingId ? '/api/students/' + editingId : '/api/students';
+      const method = editingId ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + token,
+        },
+        body: JSON.stringify({ fullName, code, phone, faculty, semester }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        errorEl.textContent = data.message || 'Error al guardar el estudiante.';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      Swal.fire({
+        title: editingId ? 'Estudiante actualizado con éxito!' : 'Estudiante agregado con éxito!',
+        icon: 'success',
+        draggable: true,
+      });
+      closeModal();
+      loadStudents(currentPage);
+    } catch {
+      errorEl.textContent = 'Error de conexión. Intenta de nuevo.';
+      errorEl.classList.remove('hidden');
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Guardar';
+    }
+  });
+
+  window.deleteStudent = async function(id, name) {
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: 'No podrás revertir esta acción.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    });
+    if (!result.isConfirmed) return;
+    try {
+      const res = await fetch('/api/students/' + id, {
+        method: 'DELETE',
+        headers: { Authorization: 'Bearer ' + token },
+      });
+      const data = await res.json();
+      if (!data.success) {
+        await Swal.fire({
+          title: 'Error',
+          text: data.message || 'Error desconocido al eliminar.',
+          icon: 'error',
+        });
+        return;
+      }
+      await Swal.fire({
+        title: '¡Eliminado!',
+        text: `${name} ha sido eliminado correctamente.`,
+        icon: 'success',
+      });
+      loadStudents(currentPage);
+    } catch {
+      await Swal.fire({
+        title: 'Error',
+        text: 'Error de conexión al eliminar.',
+        icon: 'error',
+      });
+    }
+  };
+
+  loadStudents();
+</script>

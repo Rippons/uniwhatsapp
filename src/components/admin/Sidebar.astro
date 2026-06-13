@@ -1,0 +1,83 @@
+---
+import Icon from '@components/ui/Icon.astro';
+import type { IconName } from '@components/ui/icon-names';
+
+interface NavItem {
+  label: string;
+  href: string;
+  icon: IconName;
+}
+
+const navItems: NavItem[] = [
+  { label: 'Dashboard', href: '/admin/dashboard', icon: 'dashboard' },
+  { label: 'Estudiantes', href: '/admin/students', icon: 'users' },
+  { label: 'Horarios', href: '/admin/schedules', icon: 'calendar' },
+  { label: 'Notificaciones', href: '/admin/notifications', icon: 'bell' },
+];
+
+const currentPath = Astro.url.pathname;
+---
+
+<aside class="w-72 bg-[#1e1b4b] text-white min-h-screen flex-shrink-0 flex flex-col shadow-xl transition-all duration-300">
+  <!-- Brand Header -->
+  <div class="p-6 flex items-center gap-4">
+    <div class="w-11 h-11 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-900/20">
+      <span class="font-bold text-xl text-white">U</span>
+    </div>
+    <div>
+      <h1 class="font-bold text-lg leading-none tracking-tight">UniWhatsApp</h1>
+      <p class="text-[10px] uppercase tracking-[0.2em] text-indigo-300/80 mt-1.5 font-semibold">Management</p>
+    </div>
+  </div>
+
+  <!-- Navigation Area -->
+  <nav class="flex-1 px-4 space-y-2 mt-6">
+    {navItems.map((item) => {
+      const isActive = currentPath === item.href;
+      return (
+        <a
+          href={item.href}
+          class={`flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 group relative ${
+            isActive
+              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+              : 'text-indigo-100/70 hover:bg-white/5 hover:text-white'
+          }`}
+        >
+          {isActive && <div class="absolute left-0 w-1.5 h-6 bg-white rounded-r-full"></div>}
+          <Icon
+            name={item.icon}
+            size={20}
+            class={`${isActive ? 'text-white' : 'text-indigo-300/50 group-hover:text-indigo-200'}`}
+          />
+          <span class="font-medium text-sm">{item.label}</span>
+        
+        </a>
+      );
+    })}
+  </nav>
+
+  <!-- Footer Actions -->
+  <div class="p-6 mt-auto border-t border-white/5 space-y-2">
+    <a
+      href="#"
+      class="flex items-center gap-3 px-4 py-3 text-indigo-100/60 hover:text-white transition-colors text-sm font-medium"
+    >
+      <Icon name="settings" size={20} />
+      <span>Configuración</span>
+    </a>
+    <button
+      id="logout-btn"
+      class="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-rose-300 hover:bg-rose-500/10 hover:text-rose-400 transition-all duration-200 group mt-2"
+    >
+      <Icon name="logout" size={20} class="text-rose-400/50 group-hover:text-rose-400" />
+      <span class="text-sm font-semibold italic">Cerrar Sesión</span>
+    </button>
+  </div>
+</aside>
+
+<script>
+  document.getElementById('logout-btn')?.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+  });
+</script>

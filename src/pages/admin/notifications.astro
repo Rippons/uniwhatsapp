@@ -1,0 +1,413 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+import Card from '@components/ui/Card.astro';
+import Table from '@components/ui/Table.astro';
+---
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" is:inline></script>
+
+<AdminLayout title="Notificaciones">
+  <div class="space-y-8">
+    <section class="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-slate-900 via-indigo-700 to-violet-700 px-8 py-10 text-white shadow-2xl shadow-slate-900/20">
+      <div class="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div class="max-w-2xl">
+          <p class="text-sm uppercase tracking-[0.28em] text-indigo-200/80">Panel de administración</p>
+          <h1 class="mt-4 text-4xl font-semibold tracking-tight">Notificaciones</h1>
+          <p class="mt-4 text-base leading-7 text-slate-200/90">Gestiona y programa las comunicaciones oficiales para estudiantes y facultades.</p>
+        </div>
+        <button id="new-notification-btn" class="inline-flex items-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-semibold text-[#3525cd] shadow-xl shadow-white/20 transition hover:bg-[#f8f8ff]">
+          <span class="material-symbols-outlined">add</span>
+          Nueva Notificación
+        </button>
+      </div>
+      <div class="pointer-events-none absolute inset-0 opacity-40">
+        <div class="absolute -right-24 top-0 h-72 w-72 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="absolute left-10 top-20 h-56 w-56 rounded-full bg-indigo-500/20 blur-3xl"></div>
+      </div>
+    </section>
+
+    <div class="grid gap-6 lg:grid-cols-4">
+      <div class="col-span-1 space-y-4">
+        <div class="rounded-[32px] border border-gray-200 bg-white p-6 shadow-sm">
+          <p class="text-sm uppercase tracking-[0.28em] text-slate-500">Total enviadas</p>
+          <h2 id="sent-count" class="mt-3 text-3xl font-semibold text-slate-900">0</h2>
+          <p class="mt-3 text-sm text-slate-500">Comunicación institucional activa.</p>
+        </div>
+        <div class="rounded-[32px] border border-gray-200 bg-white p-6 shadow-sm">
+          <p class="text-sm uppercase tracking-[0.28em] text-slate-500">Programadas</p>
+          <h2 id="scheduled-count" class="mt-3 text-3xl font-semibold text-slate-900">0</h2>
+          <p class="mt-3 text-sm text-slate-500">Próximos envíos confirmados.</p>
+        </div>
+        <div class="rounded-[32px] border border-gray-200 bg-white p-6 shadow-sm">
+          <p class="text-sm uppercase tracking-[0.28em] text-slate-500">Fallidas</p>
+          <h2 id="failed-count" class="mt-3 text-3xl font-semibold text-red-600">0</h2>
+          <p class="mt-3 text-sm text-slate-500">Revisa y reintenta los envíos.</p>
+        </div>
+      </div>
+
+      <div class="col-span-1 lg:col-span-3">
+        <Card class="rounded-[32px] border border-gray-200 p-0 shadow-sm overflow-hidden">
+          <div class="flex flex-col gap-4 px-6 py-5 border-b border-gray-200 bg-slate-50">
+            <div>
+              <h3 class="text-lg font-semibold text-slate-900">Historial de Notificaciones</h3>
+              <p class="mt-1 text-sm text-slate-500">Filtra y revisa el estado de envío de tus mensajes.</p>
+            </div>
+          </div>
+
+          <Table headers={['Título', 'Destinatarios', 'Programado', 'Estado', 'Enviado por', 'Fecha', 'Acciones']} class="min-w-full">
+            <tr id="loading-row">
+              <td colspan="7" class="py-8 text-center text-gray-500">Cargando notificaciones...</td>
+            </tr>
+          </Table>
+
+          <div class="flex flex-col gap-3 px-6 py-4 border-t border-gray-200 bg-slate-50 sm:flex-row sm:items-center sm:justify-between">
+            <p class="text-sm text-slate-500"><span id="notification-summary">Mostrando 0 de 0 notificaciones</span></p>
+            <div class="flex flex-wrap gap-2">
+              <button class="rounded-2xl border border-gray-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100">Anterior</button>
+              <button class="rounded-2xl bg-[#3525cd] px-3 py-2 text-sm font-semibold text-white">1</button>
+              <button class="rounded-2xl border border-gray-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100">2</button>
+              <button class="rounded-2xl border border-gray-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100">Siguiente</button>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<div id="notification-modal" class="fixed inset-0 z-50 hidden flex min-h-screen items-center justify-center overflow-y-auto bg-slate-950/40 p-4 backdrop-blur-sm">
+  <div class="relative w-full max-w-3xl max-h-[calc(100vh-4rem)] overflow-y-auto rounded-[32px] bg-white shadow-2xl border border-gray-200">
+    <div class="flex items-center justify-between gap-4 border-b border-slate-200 bg-slate-900 px-8 py-6 text-white">
+      <div>
+        <h3 class="text-xl font-semibold">Nueva Notificación</h3>
+        <p class="mt-1 text-sm text-slate-300">Envía mensajes a varios estudiantes y programa el envío.</p>
+      </div>
+      <button id="close-notification-btn" type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20">X</button>
+    </div>
+
+    <form id="notification-form" class="space-y-6 p-8">
+      <div class="grid gap-4 md:grid-cols-2">
+        <label class="block">
+          <span class="text-sm font-medium text-slate-700">Título</span>
+          <input id="title" type="text" class="mt-1 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20" required maxlength="200" />
+        </label>
+        <label class="block">
+          <span class="text-sm font-medium text-slate-700">Fecha y hora de envío</span>
+          <input id="scheduledAt" type="datetime-local" class="mt-1 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20" />
+          <p class="mt-1 text-xs text-slate-500">Deja vacío para enviar de inmediato.</p>
+        </label>
+      </div>
+
+      <label class="block">
+        <span class="text-sm font-medium text-slate-700">Mensaje</span>
+        <textarea id="message" rows="4" class="mt-1 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20" required maxlength="2000"></textarea>
+      </label>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <label class="flex items-center gap-3 text-sm text-slate-700 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <input id="send-all-checkbox" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+          Enviar a todos los estudiantes
+        </label>
+        <label class="block">
+          <span class="text-sm font-medium text-slate-700">Filtrar por facultad</span>
+          <select id="faculty-filter" class="mt-1 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+            <option value="">Todas las facultades</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="block">
+        <span class="text-sm font-medium text-slate-700">Seleccionar destinatarios</span>
+        <select id="target-students" multiple size="6" class="mt-1 h-40 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"></select>
+      </label>
+
+      <p id="form-status" class="min-h-[1.5rem] text-sm text-red-600"></p>
+
+      <div class="flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
+        <button id="cancel-notification-btn" type="button" class="rounded-2xl border border-slate-300 bg-white px-6 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100 transition">Cancelar</button>
+        <button id="submit-notification-btn" type="submit" class="rounded-2xl bg-indigo-700 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-700/20 hover:bg-indigo-800 transition">Enviar notificación</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+  // @ts-nocheck
+  declare const Swal: any;
+  const token = localStorage.getItem('token');
+  if (!token) window.location.href = '/login';
+
+  const notificationModal = /** @type {any} */ (document.getElementById('notification-modal'));
+  const newNotificationBtn = /** @type {any} */ (document.getElementById('new-notification-btn'));
+  const closeNotificationBtn = /** @type {any} */ (document.getElementById('close-notification-btn'));
+  const cancelNotificationBtn = /** @type {any} */ (document.getElementById('cancel-notification-btn'));
+  const notificationForm = /** @type {any} */ (document.getElementById('notification-form'));
+  const studentsSelect = /** @type {any} */ (document.getElementById('target-students'));
+  const facultyFilter = /** @type {any} */ (document.getElementById('faculty-filter'));
+  const sendAllCheckbox = /** @type {any} */ (document.getElementById('send-all-checkbox'));
+  const formStatus = /** @type {any} */ (document.getElementById('form-status'));
+  const sentCountEl = /** @type {HTMLElement | null} */ (document.getElementById('sent-count'));
+  const scheduledCountEl = /** @type {HTMLElement | null} */ (document.getElementById('scheduled-count'));
+  const failedCountEl = /** @type {HTMLElement | null} */ (document.getElementById('failed-count'));
+  const notificationSummary = /** @type {HTMLElement | null} */ (document.getElementById('notification-summary'));
+
+  let studentsLoaded = false;
+  let students = [];
+
+  function openModal() {
+    if (!notificationModal) return;
+    notificationModal.classList.remove('hidden');
+  }
+
+  function closeModal() {
+    if (!notificationModal || !notificationForm || !studentsSelect) return;
+    notificationModal.classList.add('hidden');
+    notificationForm.reset();
+    studentsSelect.disabled = false;
+    studentsSelect.classList.remove('opacity-50');
+    if (formStatus) formStatus.textContent = '';
+  }
+
+  function renderStudentOptions() {
+    if (!studentsSelect || !facultyFilter) return;
+    const selectedFaculty = facultyFilter.value;
+    const visibleStudents = selectedFaculty
+      ? students.filter((student) => student.faculty === selectedFaculty)
+      : students;
+
+    studentsSelect.innerHTML = visibleStudents
+      .map((student) => `<option value="${student._id}">${student.fullName} (${student.code})${student.faculty ? ` - ${student.faculty}` : ''}</option>`)
+      .join('');
+  }
+
+  async function fetchStudents() {
+    if (!studentsSelect || !facultyFilter || !formStatus) return;
+
+    try {
+      const res = await fetch('/api/students?limit=500', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = /** @type {{ success: boolean; data: Array<{ _id: string; fullName: string; code: string; faculty: string }> }>} */ (await res.json());
+      if (!data.success) throw new Error('Error cargando estudiantes');
+
+      students = /** @type {any[]} */ (data.data);
+      const faculties = [...new Set(students.map((student) => student.faculty).filter(Boolean))].sort();
+      facultyFilter.innerHTML = [
+        '<option value="">Todas las facultades</option>',
+        ...faculties.map((faculty) => `<option value="${faculty}">${faculty}</option>`),
+      ].join('');
+      renderStudentOptions();
+      studentsLoaded = true;
+    } catch (error) {
+      if (formStatus) formStatus.textContent = 'No se pudieron cargar los estudiantes. Intenta de nuevo.';
+      console.error(error);
+    }
+  }
+
+  function updateNotificationSummary(notifications) {
+    const sentCount = notifications.filter((notification) => String(notification.status || '').toUpperCase() === 'SENT').length;
+    const scheduledCount = notifications.filter((notification) => String(notification.status || '').toUpperCase() === 'SCHEDULED').length;
+    const failedCount = notifications.filter((notification) => String(notification.status || '').toUpperCase() === 'FAILED').length;
+    const totalCount = notifications.length;
+
+    if (sentCountEl) sentCountEl.textContent = String(sentCount);
+    if (scheduledCountEl) scheduledCountEl.textContent = String(scheduledCount);
+    if (failedCountEl) failedCountEl.textContent = String(failedCount);
+    if (notificationSummary) notificationSummary.textContent = `Mostrando ${totalCount} notificación${totalCount === 1 ? '' : 'es'}`;
+  }
+
+  async function loadNotifications() {
+    try {
+      const res = await fetch('/api/notifications', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = /** @type {{ success: boolean; data: any[] }} */ (await res.json());
+      const tbody = document.querySelector('tbody');
+      if (!tbody || !data.success) return;
+      const notifications = /** @type {any[]} */ (data.data);
+
+      if (!notifications?.length) {
+        updateNotificationSummary([]);
+        tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-gray-500">No hay notificaciones</td></tr>';
+        return;
+      }
+
+      const statusColors = /** @type {Record<string, string>} */ ({
+        PENDING: 'bg-yellow-100 text-yellow-700',
+        SCHEDULED: 'bg-blue-100 text-blue-700',
+        SENT: 'bg-green-100 text-green-700',
+        FAILED: 'bg-red-100 text-red-700',
+      });
+
+      updateNotificationSummary(notifications);
+      tbody.innerHTML = notifications
+        .map((n) => {
+          const scheduledAt = n.scheduledAt ? new Date(n.scheduledAt).toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+          const statusKey = String(n.status);
+          return `
+            <tr class="hover:bg-gray-50">
+              <td class="py-3 px-4 font-medium">${n.title}</td>
+              <td class="py-3 px-4">${(n.targetStudents?.length) || 0} estudiantes</td>
+              <td class="py-3 px-4 text-sm text-gray-600">${scheduledAt}</td>
+              <td class="py-3 px-4">
+                <span class="px-2 py-1 rounded-full text-xs font-medium ${statusColors[statusKey] || ''}">${n.status}</span>
+              </td>
+              <td class="py-3 px-4">${(n.sentBy?.name) || '-'}</td>
+              <td class="py-3 px-4 text-sm text-gray-500">${n.createdAt ? new Date(n.createdAt).toLocaleDateString('es-CO') : '-'}</td>
+              <td class="py-3 px-4">
+                <button class="delete-notification-btn px-3 py-1.5 rounded-lg bg-red-400 text-white text-sm font-medium hover:bg-red-500 active:bg-red-600 transition-colors" data-id="${n._id}">Eliminar</button>
+              </td>
+
+            </tr>
+          `;
+        })
+        .join('');
+
+      // Agregar event listeners a los botones de eliminar
+      document.querySelectorAll('.delete-notification-btn').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          const id = (e.target).getAttribute('data-id');
+          if (!id) return;
+          await deleteNotification(id);
+        });
+      });
+    } catch (error) {
+      updateNotificationSummary([]);
+      const tbody = document.querySelector('tbody');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-red-500">Error cargando notificaciones</td></tr>';
+      console.error(error);
+    }
+  }
+
+  /** @param {string} message @param {boolean} [isError] */
+  function setFormStatus(message, isError = true) {
+    if (!formStatus) return;
+    formStatus.textContent = message;
+    formStatus.classList.toggle('text-red-600', isError);
+    formStatus.classList.toggle('text-green-600', !isError);
+  }
+
+  newNotificationBtn?.addEventListener('click', async () => {
+    if (!studentsLoaded) {
+      setFormStatus('Cargando estudiantes...', false);
+      await fetchStudents();
+      setFormStatus('', false);
+    }
+    openModal();
+  });
+
+  closeNotificationBtn?.addEventListener('click', closeModal);
+  cancelNotificationBtn?.addEventListener('click', closeModal);
+  notificationModal?.addEventListener('click', (event) => {
+    if (event.target === notificationModal) closeModal();
+  });
+
+  facultyFilter?.addEventListener('change', renderStudentOptions);
+  sendAllCheckbox?.addEventListener('change', () => {
+    if (!studentsSelect || !sendAllCheckbox) return;
+    studentsSelect.disabled = sendAllCheckbox.checked;
+    studentsSelect.classList.toggle('opacity-50', sendAllCheckbox.checked);
+  });
+
+  notificationForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!sendAllCheckbox || !studentsSelect) return;
+
+    const titleInput = /** @type {HTMLInputElement | null} */ (document.getElementById('title'));
+    const messageInput = /** @type {HTMLTextAreaElement | null} */ (document.getElementById('message'));
+    const scheduledInput = /** @type {HTMLInputElement | null} */ (document.getElementById('scheduledAt'));
+    if (!titleInput || !messageInput || !scheduledInput) return;
+
+    const title = titleInput.value.trim();
+    const message = messageInput.value.trim();
+    const scheduledAt = scheduledInput.value;
+    const targetStudents = sendAllCheckbox.checked
+      ? Array.from(studentsSelect.options).map((option) => /** @type {HTMLOptionElement} */ (option).value)
+      : Array.from(studentsSelect.selectedOptions).map((option) => /** @type {HTMLOptionElement} */ (option).value);
+
+    if (!title || !message) {
+      setFormStatus('El título y el mensaje son obligatorios.');
+      return;
+    }
+
+    if (!targetStudents.length) {
+      setFormStatus('Selecciona al menos un destinatario o marca enviar a todos.');
+      return;
+    }
+
+    try {
+      setFormStatus('Enviando notificación...', false);
+      const response = await fetch('/api/notifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title, message, targetStudents, scheduledAt: scheduledAt || undefined }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        setFormStatus(result.message || 'No se pudo crear la notificación.');
+        return;
+      }
+
+      setFormStatus('Notificación creada correctamente.', false);
+      closeModal();
+      loadNotifications();
+    } catch (error) {
+      console.error(error);
+      setFormStatus('Error creando la notificación. Intenta de nuevo.');
+    }
+  });
+
+  async function deleteNotification(id) {
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: 'No podrás revertir esta acción.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const response = await fetch(`/api/notifications?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        await Swal.fire({
+          title: 'Error',
+          text: data.error || 'No se pudo eliminar la notificación.',
+          icon: 'error',
+        });
+        return;
+      }
+
+      await Swal.fire({
+        title: '¡Eliminada!',
+        text: 'La notificación ha sido eliminada correctamente.',
+        icon: 'success',
+      });
+
+      loadNotifications();
+    } catch (error) {
+      console.error(error);
+      await Swal.fire({
+        title: 'Error',
+        text: 'Error eliminando la notificación. Intenta de nuevo.',
+        icon: 'error',
+      });
+    }
+  }
+
+  loadNotifications();
+</script>

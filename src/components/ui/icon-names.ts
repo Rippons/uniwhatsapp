@@ -1,0 +1,17 @@
+export type IconName =
+  | 'dashboard'
+  | 'users'
+  | 'calendar'
+  | 'bell'
+  | 'logout'
+  | 'settings'
+  | 'chat'
+  | 'plus'
+  | 'edit'
+  | 'trash'
+  | 'search'
+  | 'chevron-right'
+  | 'check'
+  | 'x'
+  | 'alert'
+  | 'mail';

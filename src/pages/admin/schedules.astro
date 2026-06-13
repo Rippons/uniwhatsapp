@@ -1,0 +1,528 @@
+---
+import AdminLayout from '@layouts/AdminLayout.astro';
+---
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" is:inline></script>
+<AdminLayout title="Horarios">
+  <div class="space-y-8">
+    <section class="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-slate-900 via-indigo-700 to-violet-700 px-8 py-10 text-white shadow-2xl shadow-slate-900/20">
+      <div class="relative z-10 max-w-3xl">
+        <p class="text-sm uppercase tracking-[0.28em] text-indigo-200/80">Panel de administración</p>
+        <h1 class="mt-4 text-4xl font-semibold tracking-tight">Horarios</h1>
+        <p class="mt-4 max-w-2xl text-base leading-7 text-slate-200/90">Gestiona horarios académicos, asigna clases y visualiza conflictos de forma clara y moderna.</p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/10">
+            <span class="h-2.5 w-2.5 rounded-full bg-emerald-300 animate-pulse"></span>
+            Sistema activo
+          </span>
+          <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-slate-200">
+            <span class="material-symbols-outlined text-sm">schedule</span>
+            Horarios actualizados
+          </span>
+        </div>
+      </div>
+      <div class="pointer-events-none absolute inset-0 opacity-40">
+        <div class="absolute -right-24 top-0 h-72 w-72 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="absolute left-10 top-20 h-56 w-56 rounded-full bg-indigo-500/20 blur-3xl"></div>
+      </div>
+    </section>
+
+    <div class="grid grid-cols-12 gap-6">
+      <div class="col-span-12 lg:col-span-4 rounded-[32px] border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="flex items-start justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-lg font-semibold text-slate-900">Seleccionar Estudiante</h2>
+            <p class="mt-1 text-sm text-slate-500">Busca por nombre o código para cargar el horario.</p>
+          </div>
+          <button id="add-schedule-btn" class="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 hover:bg-slate-800 transition">
+            <span class="material-symbols-outlined">add</span>
+            Nuevo Horario
+          </button>
+        </div>
+
+        <div class="space-y-5">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Buscar por nombre o ID</label>
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+              <input id="student-search" type="text" placeholder="Escribe para buscar..." autocomplete="off" class="w-full rounded-2xl border border-gray-200 bg-slate-50 py-3 pl-12 pr-4 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20" />
+            </div>
+            <div id="student-suggestions" class="absolute left-0 right-0 mt-2 hidden overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl z-20"></div>
+          </div>
+
+          <div id="student-info" class="hidden rounded-[28px] border border-indigo-100 bg-indigo-50 p-4">
+            <div class="flex items-center justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <div class="h-12 w-12 rounded-2xl bg-indigo-200 text-indigo-800 flex items-center justify-center text-lg font-semibold">S</div>
+                <div>
+                  <p id="student-info-name" class="font-semibold text-slate-900"></p>
+                  <p id="student-info-detail" class="text-sm text-slate-600"></p>
+                </div>
+              </div>
+              <button id="clear-student" class="rounded-full bg-white px-3 py-2 text-slate-500 hover:bg-slate-100 transition">✕</button>
+            </div>
+          </div>
+
+          <div id="shift-toggle" class="hidden rounded-[28px] border border-gray-200 bg-slate-50 p-4">
+            <p class="text-sm font-medium text-slate-700 mb-3">Turno Académico</p>
+            <div class="flex gap-2">
+              <button id="btn-morning" class="flex-1 rounded-2xl bg-indigo-700 px-4 py-2 text-sm font-semibold text-white transition">Mañana (6am–12pm)</button>
+              <button id="btn-night" class="flex-1 rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-slate-700 border border-gray-200 transition">Noche (6pm–10pm)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-span-12 lg:col-span-8 rounded-[32px] border border-gray-200 bg-white p-6 shadow-sm flex flex-col">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+          <div>
+            <h2 class="text-lg font-semibold text-slate-900">Horario Semanal</h2>
+            <p class="mt-1 text-sm text-slate-500">Haz clic en una clase para editarla.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="rounded-2xl p-2 text-slate-500 hover:bg-slate-100 transition"><span class="material-symbols-outlined">print</span></button>
+            <button class="rounded-2xl p-2 text-slate-500 hover:bg-slate-100 transition"><span class="material-symbols-outlined">download</span></button>
+          </div>
+        </div>
+
+        <div class="grow overflow-x-auto" id="schedule-content">
+          <p class="text-center text-slate-400 py-8">Busca un estudiante para ver sus horarios</p>
+        </div>
+
+        <div class="mt-6 flex items-center gap-3 text-sm text-slate-500">
+          <span class="material-symbols-outlined text-base">info</span>
+          <p>Los cambios realizados se guardarán automáticamente en la nube.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<!-- Modal -->
+<div id="schedule-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
+  <div class="relative w-full max-w-xl overflow-hidden rounded-[32px] bg-white shadow-2xl">
+    <div class="flex items-center justify-between gap-4 border-b border-slate-200 bg-slate-900 px-8 py-6 text-white">
+      <h3 class="text-xl font-semibold" id="modal-title">Nuevo Horario</h3>
+      <button id="close-modal" class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <div class="space-y-4 p-8">
+      <div id="modal-error" class="hidden rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"></div>
+      <div id="modal-conflict" class="hidden rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700"></div>
+
+      <div class="grid gap-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Materia *</label>
+          <input id="field-subject" type="text" placeholder="Ej: Cálculo Diferencial" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Docente *</label>
+          <input id="field-teacher" type="text" placeholder="Ej: Prof. García" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Salón *</label>
+          <input id="field-classroom" type="text" placeholder="Ej: A-201" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Día *</label>
+          <select id="field-day" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+            <option value="" disabled selected>Ej. Seleccionar día</option>
+            <option value="MONDAY">Lunes</option>
+            <option value="TUESDAY">Martes</option>
+            <option value="WEDNESDAY">Miércoles</option>
+            <option value="THURSDAY">Jueves</option>
+            <option value="FRIDAY">Viernes</option>
+            <option value="SATURDAY">Sábado</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Hora inicio *</label>
+            <input id="field-startTime" type="time" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Hora fin *</label>
+            <input id="field-endTime" type="time" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-8 py-6 sm:flex-row sm:justify-end">
+      <button id="cancel-modal" class="rounded-2xl border border-slate-300 bg-white px-6 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100 transition">Cancelar</button>
+      <button id="save-schedule" class="rounded-2xl bg-indigo-700 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-700/20 hover:bg-indigo-800 transition">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  declare const Swal: any;
+  const token = localStorage.getItem('token');
+  if (!token) window.location.href = '/login';
+
+  const DAYS_ES: Record<string, string> = {
+    MONDAY: 'Lunes', TUESDAY: 'Martes', WEDNESDAY: 'Miércoles',
+    THURSDAY: 'Jueves', FRIDAY: 'Viernes', SATURDAY: 'Sábado',
+  };
+  const DAYS = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+
+  // Turnos
+  const MORNING_START = 6;   // 6:00
+  const MORNING_END   = 17;  // 17:00
+  const NIGHT_START   = 17;  // 17:00
+  const NIGHT_END     = 22;  // 22:00
+  const SLOT_MINUTES  = 30;  // cada celda = 30 min
+
+  let selectedStudent: Record<string, any> | null = null;
+  let currentSchedules: Record<string, any>[] = [];
+  let editingId: string | null = null;
+  let currentShift: 'morning' | 'night' = 'morning';
+  let searchTimeout: ReturnType<typeof setTimeout>;
+
+  // --- BÚSQUEDA ESTUDIANTE ---
+  const searchInput = document.getElementById('student-search') as HTMLInputElement;
+  const suggestions = document.getElementById('student-suggestions') as HTMLDivElement;
+
+  searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    const q = searchInput.value.trim();
+    if (q.length < 2) { suggestions.classList.add('hidden'); return; }
+    searchTimeout = setTimeout(() => searchStudents(q), 300);
+  });
+
+  async function searchStudents(q: string) {
+    try {
+      const res = await fetch('/api/students?search=' + encodeURIComponent(q) + '&limit=5', {
+        headers: { Authorization: 'Bearer ' + token },
+      });
+      const data = await res.json();
+      const students = data.data ?? [];
+      if (!students.length) {
+        suggestions.innerHTML = '<p class="px-4 py-3 text-sm text-gray-500">No se encontraron estudiantes</p>';
+        suggestions.classList.remove('hidden');
+        return;
+      }
+      suggestions.innerHTML = students.map((s: Record<string, any>) => `
+        <div class="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0"
+             onclick="selectStudent(${JSON.stringify(s).replace(/"/g, '&quot;')})">
+          <p class="text-sm font-medium">${s.fullName}</p>
+          <p class="text-xs text-gray-500">${s.code} · ${s.faculty}</p>
+        </div>
+      `).join('');
+      suggestions.classList.remove('hidden');
+    } catch { suggestions.classList.add('hidden'); }
+  }
+
+  (window as any).selectStudent = function(student: Record<string, any>) {
+    selectedStudent = student;
+    searchInput.value = student.fullName;
+    suggestions.classList.add('hidden');
+    document.getElementById('student-info')?.classList.remove('hidden');
+    (document.getElementById('student-info-name') as HTMLElement).textContent = student.fullName;
+    (document.getElementById('student-info-detail') as HTMLElement).textContent =
+      student.code + ' · ' + student.faculty + ' · Semestre ' + student.semester;
+    document.getElementById('shift-toggle')?.classList.remove('hidden');
+    loadSchedules(student._id);
+  };
+
+  document.getElementById('clear-student')?.addEventListener('click', () => {
+    selectedStudent = null;
+    searchInput.value = '';
+    document.getElementById('student-info')?.classList.add('hidden');
+    document.getElementById('shift-toggle')?.classList.add('hidden');
+    (document.getElementById('schedule-content') as HTMLElement).innerHTML =
+      '<p class="text-center text-gray-400 py-8">Busca un estudiante para ver sus horarios</p>';
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!searchInput.contains(e.target as Node) && !suggestions.contains(e.target as Node))
+      suggestions.classList.add('hidden');
+  });
+
+  // --- TOGGLE TURNO ---
+  document.getElementById('btn-morning')?.addEventListener('click', () => setShift('morning'));
+  document.getElementById('btn-night')?.addEventListener('click', () => setShift('night'));
+
+  function setShift(shift: 'morning' | 'night') {
+    currentShift = shift;
+    const btnM = document.getElementById('btn-morning') as HTMLButtonElement;
+    const btnN = document.getElementById('btn-night') as HTMLButtonElement;
+    if (shift === 'morning') {
+      btnM.className = 'px-4 py-1.5 text-sm rounded-full bg-blue-600 text-white font-medium';
+      btnN.className = 'px-4 py-1.5 text-sm rounded-full bg-gray-200 text-gray-700 font-medium';
+    } else {
+      btnN.className = 'px-4 py-1.5 text-sm rounded-full bg-indigo-600 text-white font-medium';
+      btnM.className = 'px-4 py-1.5 text-sm rounded-full bg-gray-200 text-gray-700 font-medium';
+    }
+    renderGrid(currentSchedules);
+  }
+
+  // --- CARGAR HORARIOS ---
+  async function loadSchedules(studentId: string) {
+    const content = document.getElementById('schedule-content') as HTMLElement;
+    content.innerHTML = '<p class="text-center text-gray-400 py-8">Cargando horarios...</p>';
+    try {
+      const res = await fetch('/api/schedules/student/' + studentId, {
+        headers: { Authorization: 'Bearer ' + token },
+      });
+      const data = await res.json();
+      currentSchedules = data.data ?? [];
+      renderGrid(currentSchedules);
+    } catch {
+      content.innerHTML = '<p class="text-center text-red-500 py-8">Error cargando horarios</p>';
+    }
+  }
+
+  // --- RENDER GRILLA ---
+  function timeToMinutes(time: string): number {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+  }
+
+  function formatHour(hour: number): string {
+    const h = hour % 12 === 0 ? 12 : hour % 12;
+    const ampm = hour < 12 ? 'am' : 'pm';
+    return h + ':00' + ampm;
+  }
+
+  function renderGrid(schedules: Record<string, any>[]) {
+    const content = document.getElementById('schedule-content') as HTMLElement;
+
+    const startH = currentShift === 'morning' ? MORNING_START : NIGHT_START;
+    const endH   = currentShift === 'morning' ? MORNING_END   : NIGHT_END;
+    const totalMinutes = (endH - startH) * 60;
+    const slots = totalMinutes / SLOT_MINUTES;
+
+    // Colores por materia
+    const colors = [
+      'bg-blue-100 border-blue-300 text-blue-800',
+      'bg-green-100 border-green-300 text-green-800',
+      'bg-purple-100 border-purple-300 text-purple-800',
+      'bg-orange-100 border-orange-300 text-orange-800',
+      'bg-pink-100 border-pink-300 text-pink-800',
+      'bg-teal-100 border-teal-300 text-teal-800',
+      'bg-yellow-100 border-yellow-300 text-yellow-800',
+      'bg-red-100 border-red-300 text-red-800',
+    ];
+    const subjectColorMap: Record<string, string> = {};
+    let colorIdx = 0;
+    for (const s of schedules) {
+      if (!subjectColorMap[s.subject]) {
+        subjectColorMap[s.subject] = colors[colorIdx % colors.length];
+        colorIdx++;
+      }
+    }
+
+    // Encabezados días
+    const dayHeaders = DAYS.map(d =>
+      `<th class="text-center text-xs font-semibold text-gray-600 py-2 px-1 border-b border-gray-200 bg-gray-50">${DAYS_ES[d]}</th>`
+    ).join('');
+
+    // Filas de tiempo
+    let rows = '';
+    for (let i = 0; i < slots; i++) {
+      const totalMin = startH * 60 + i * SLOT_MINUTES;
+      const h = Math.floor(totalMin / 60);
+      const m = totalMin % 60;
+      const timeLabel = i % 2 === 0 ? formatHour(h) : '';
+      const timeStr = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+      const nextTotalMin = totalMin + SLOT_MINUTES;
+      const nextH = Math.floor(nextTotalMin / 60);
+      const nextM = nextTotalMin % 60;
+      const nextTimeStr = String(nextH).padStart(2, '0') + ':' + String(nextM).padStart(2, '0');
+
+      const isHourStart = m === 0;
+      const rowBg = isHourStart ? 'bg-white' : 'bg-gray-50/50';
+
+      let cells = '';
+      for (const day of DAYS) {
+        // Buscar clase que empiece en este slot
+        const classHere = schedules.find(s =>
+          s.day === day && s.startTime === timeStr
+        );
+        // Buscar clase que cubra este slot (para no renderizar celdas dentro de una clase)
+        const covered = schedules.find(s => {
+          if (s.day !== day) return false;
+          const sStart = timeToMinutes(s.startTime);
+          const sEnd = timeToMinutes(s.endTime);
+          const slotStart = totalMin;
+          return slotStart > sStart && slotStart < sEnd;
+        });
+
+        if (classHere) {
+          const startMin = timeToMinutes(classHere.startTime);
+          const endMin = timeToMinutes(classHere.endTime);
+          const durationSlots = (endMin - startMin) / SLOT_MINUTES;
+          const colorClass = subjectColorMap[classHere.subject];
+          cells += `
+            <td rowspan="${durationSlots}" class="px-1 py-0.5 align-top border border-gray-200">
+              <div class="h-full rounded border ${colorClass} p-1.5 cursor-pointer hover:opacity-80 transition-opacity"
+                   onclick="openEdit('${classHere._id}', ${JSON.stringify(classHere).replace(/"/g, '&quot;')})">
+                <p class="text-xs font-semibold leading-tight">${classHere.subject}</p>
+                <p class="text-xs opacity-70 mt-0.5">${classHere.classroom}</p>
+                <p class="text-xs opacity-60">${classHere.teacher.split(' ').slice(-1)[0]}</p>
+              </div>
+            </td>`;
+        } else if (!covered) {
+          cells += `<td class="border border-gray-100 ${rowBg} hover:bg-blue-50 transition-colors" style="height:28px"></td>`;
+        }
+      }
+
+      rows += `
+        <tr>
+          <td class="text-right pr-2 text-xs text-gray-400 font-mono whitespace-nowrap border-b border-gray-100 ${isHourStart ? 'border-t border-gray-200 font-medium text-gray-600' : ''}" style="width:52px;min-width:52px">
+            ${timeLabel}
+          </td>
+          ${cells}
+        </tr>`;
+    }
+
+    const hasSchedulesInShift = schedules.some(s => {
+      const h = parseInt(s.startTime.split(':')[0]);
+      return currentShift === 'morning' ? (h >= MORNING_START && h < MORNING_END) : (h >= NIGHT_START && h < NIGHT_END);
+    });
+
+    content.innerHTML = `
+      <div class="overflow-x-auto rounded-lg border border-gray-200">
+        <table class="w-full border-collapse text-sm" style="min-width:600px">
+          <thead>
+            <tr>
+              <th class="bg-gray-50 border-b border-gray-200" style="width:52px"></th>
+              ${dayHeaders}
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      ${!hasSchedulesInShift ? '<p class="text-center text-gray-400 text-sm mt-4">No hay clases registradas en este turno</p>' : ''}
+      <p class="text-xs text-gray-400 mt-3 text-center">Haz clic en una clase para editarla</p>
+    `;
+  }
+
+  // --- MODAL ---
+  document.getElementById('add-schedule-btn')?.addEventListener('click', () => {
+    if (!selectedStudent) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Estudiante requerido',
+        text: 'Necesitas primero seleccionar un estudiante para agregar un horario',
+      });
+      return;
+    }
+
+    editingId = null;
+    (document.getElementById('modal-title') as HTMLElement).textContent = 'Nuevo Horario';
+    ['subject','teacher','classroom'].forEach(f =>
+      (document.getElementById('field-' + f) as HTMLInputElement).value = '');
+    (document.getElementById('field-day') as HTMLSelectElement).value = '';
+    (document.getElementById('field-startTime') as HTMLInputElement).value = '';
+    (document.getElementById('field-endTime') as HTMLInputElement).value = '';
+    hideErrors();
+    document.getElementById('schedule-modal')?.classList.remove('hidden');
+  });
+
+  (window as any).openEdit = function(id: string, s: Record<string, any>) {
+    editingId = id;
+    (document.getElementById('modal-title') as HTMLElement).textContent = 'Editar Horario';
+    (document.getElementById('field-subject') as HTMLInputElement).value = s.subject;
+    (document.getElementById('field-teacher') as HTMLInputElement).value = s.teacher;
+    (document.getElementById('field-classroom') as HTMLInputElement).value = s.classroom;
+    (document.getElementById('field-day') as HTMLSelectElement).value = s.day;
+    (document.getElementById('field-startTime') as HTMLInputElement).value = s.startTime;
+    (document.getElementById('field-endTime') as HTMLInputElement).value = s.endTime;
+    hideErrors();
+    document.getElementById('schedule-modal')?.classList.remove('hidden');
+  };
+
+  function closeModal() {
+    document.getElementById('schedule-modal')?.classList.add('hidden');
+    editingId = null;
+  }
+  function hideErrors() {
+    document.getElementById('modal-error')?.classList.add('hidden');
+    document.getElementById('modal-conflict')?.classList.add('hidden');
+  }
+
+  document.getElementById('close-modal')?.addEventListener('click', closeModal);
+  document.getElementById('cancel-modal')?.addEventListener('click', closeModal);
+
+  function hasConflict(day: string, start: string, end: string, excludeId: string | null) {
+    for (const s of currentSchedules) {
+      if (s._id === excludeId || s.day !== day) continue;
+      if (start < s.endTime && end > s.startTime)
+        return s.subject + ' (' + s.startTime + '–' + s.endTime + ')';
+    }
+    return null;
+  }
+
+  document.getElementById('save-schedule')?.addEventListener('click', async () => {
+    const subject   = (document.getElementById('field-subject') as HTMLInputElement).value.trim();
+    const teacher   = (document.getElementById('field-teacher') as HTMLInputElement).value.trim();
+    const classroom = (document.getElementById('field-classroom') as HTMLInputElement).value.trim();
+    const day       = (document.getElementById('field-day') as HTMLSelectElement).value;
+    const startTime = (document.getElementById('field-startTime') as HTMLInputElement).value;
+    const endTime   = (document.getElementById('field-endTime') as HTMLInputElement).value;
+    const errorEl   = document.getElementById('modal-error') as HTMLElement;
+    const conflictEl = document.getElementById('modal-conflict') as HTMLElement;
+    hideErrors();
+
+    if (!subject || !teacher || !classroom || !day || !startTime || !endTime) {
+      errorEl.textContent = 'Todos los campos son obligatorios.';
+      errorEl.classList.remove('hidden'); return;
+    }
+    if (startTime >= endTime) {
+      errorEl.textContent = 'La hora de fin debe ser mayor a la hora de inicio.';
+      errorEl.classList.remove('hidden'); return;
+    }
+    const conflict = hasConflict(day, startTime, endTime, editingId);
+    if (conflict) {
+      conflictEl.textContent = 'Conflicto con: ' + conflict;
+      conflictEl.classList.remove('hidden'); return;
+    }
+
+    const saveBtn = document.getElementById('save-schedule') as HTMLButtonElement;
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Guardando...';
+
+    try {
+      const url = editingId ? '/api/schedules/' + editingId : '/api/schedules';
+      const method = editingId ? 'PUT' : 'POST';
+      const body: Record<string, any> = { subject, teacher, classroom, day, startTime, endTime };
+      if (!editingId) body.studentId = selectedStudent!._id;
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        errorEl.textContent = data.message || 'Error al guardar.';
+        errorEl.classList.remove('hidden'); return;
+      }
+      if (!editingId) {
+        Swal.fire({
+          title: 'Horario agregado con éxito!',
+          icon: 'success',
+          draggable: true
+        });
+      } else {
+        Swal.fire({
+          title: 'Horario actualizado con éxito!',
+          icon: 'success',
+          draggable: true
+        });
+      }
+      closeModal();
+      loadSchedules(selectedStudent!._id);
+    } catch {
+      errorEl.textContent = 'Error de conexión.';
+      errorEl.classList.remove('hidden');
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Guardar';
+    }
+  });
+</script>
